@@ -1,24 +1,11 @@
-# README
+# Snidanok 🇺🇦
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
 
-Things you may want to cover:
+Plan weekly breakfasts, auto-generate grocery lists. Rails 8 + Hotwire + Postgres.
 
-* Ruby version
+## Setup
 
-* System dependencies
+    docker compose up --build
+    docker compose run --rm web bin/rails db:create db:migrate
 
-* Configuration
-
-* Database creation
-
-* Database initialization
-
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
+Open http://localhost:3000
