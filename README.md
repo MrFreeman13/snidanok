@@ -1,7 +1,7 @@
 # Snidanok 🇺🇦
 
 
-Plan weekly breakfasts, auto-generate grocery lists. Rails 8 + Hotwire + Postgres.
+Plan weekly breakfasts, auto-generate grocery lists
 
 ## Setup
 
