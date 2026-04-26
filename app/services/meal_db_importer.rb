@@ -63,7 +63,7 @@ class MealDbImporter
       amount = data["strMeasure#{i}"].to_s.strip
       next if name.empty?
 
-      [name.downcase, amount]
+      [ name.downcase, amount ]
     end
   end
 end

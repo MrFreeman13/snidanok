@@ -9,7 +9,7 @@ RSpec.describe MealDbClient do
     it "returns the idMeal values from the API response" do
       stub_http(
         "https://www.themealdb.com/api/json/v1/1/filter.php?c=Breakfast",
-        { "meals" => [{ "idMeal" => "1" }, { "idMeal" => "2" }] }
+        { "meals" => [ { "idMeal" => "1" }, { "idMeal" => "2" } ] }
       )
 
       expect(client.list_by_category("Breakfast")).to eq(%w[1 2])
@@ -39,7 +39,7 @@ RSpec.describe MealDbClient do
       meal = { "idMeal" => "42", "strMeal" => "Pancakes" }
       stub_http(
         "https://www.themealdb.com/api/json/v1/1/lookup.php?i=42",
-        { "meals" => [meal] }
+        { "meals" => [ meal ] }
       )
 
       expect(client.lookup("42")).to eq(meal)

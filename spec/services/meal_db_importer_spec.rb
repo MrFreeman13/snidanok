@@ -5,7 +5,7 @@ require "rails_helper"
 RSpec.describe MealDbImporter do
   let(:client) { instance_double(MealDbClient) }
 
-  def meal_data(id:, title: "Pancakes", ingredients: [["flour", "1 cup"], ["milk", "1 cup"]])
+  def meal_data(id:, title: "Pancakes", ingredients: [ [ "flour", "1 cup" ], [ "milk", "1 cup" ] ])
     data = {
       "idMeal" => id,
       "strMeal" => title,
@@ -46,26 +46,26 @@ RSpec.describe MealDbImporter do
     end
 
     it "creates ingredients and recipe_ingredients with amounts" do
-      allow(client).to receive(:list_by_category).and_return(["1"])
+      allow(client).to receive(:list_by_category).and_return([ "1" ])
       allow(client).to receive(:lookup).with("1").and_return(
-        meal_data(id: "1", ingredients: [["Flour", "2 cups"], ["Eggs", "3"]])
+        meal_data(id: "1", ingredients: [ [ "Flour", "2 cups" ], [ "Eggs", "3" ] ])
       )
 
       described_class.new(client: client).call
 
       recipe = Recipe.find_by!(external_id: "1")
       expect(recipe.ingredients.pluck(:name)).to match_array(%w[flour eggs])
-      expect(recipe.recipe_ingredients.pluck(:amount)).to match_array(["2 cups", "3"])
+      expect(recipe.recipe_ingredients.pluck(:amount)).to match_array([ "2 cups", "3" ])
     end
 
     it "reuses existing ingredients across recipes" do
       Ingredient.create!(name: "Flour")
       allow(client).to receive(:list_by_category).and_return(%w[1 2])
       allow(client).to receive(:lookup).with("1").and_return(
-        meal_data(id: "1", ingredients: [["flour", "1 cup"]])
+        meal_data(id: "1", ingredients: [ [ "flour", "1 cup" ] ])
       )
       allow(client).to receive(:lookup).with("2").and_return(
-        meal_data(id: "2", ingredients: [["flour", "2 cups"]])
+        meal_data(id: "2", ingredients: [ [ "flour", "2 cups" ] ])
       )
 
       expect { described_class.new(client: client).call }.to change(Ingredient, :count).by(0)
@@ -74,7 +74,7 @@ RSpec.describe MealDbImporter do
 
     it "skips recipes that already exist" do
       Recipe.create!(external_id: "1", title: "Old Cake")
-      allow(client).to receive(:list_by_category).and_return(["1"])
+      allow(client).to receive(:list_by_category).and_return([ "1" ])
       expect(client).not_to receive(:lookup)
 
       described_class.new(client: client).call
@@ -83,7 +83,7 @@ RSpec.describe MealDbImporter do
     end
 
     it "skips when lookup returns nil" do
-      allow(client).to receive(:list_by_category).and_return(["1"])
+      allow(client).to receive(:list_by_category).and_return([ "1" ])
       allow(client).to receive(:lookup).with("1").and_return(nil)
 
       expect { described_class.new(client: client).call }.not_to change(Recipe, :count)
@@ -98,13 +98,13 @@ RSpec.describe MealDbImporter do
       described_class.new(client: client).call
 
       expect(Rails.logger).to have_received(:error).with(/\[MealDbImporter\] 1: boom/)
-      expect(Recipe.pluck(:external_id)).to eq(["2"])
+      expect(Recipe.pluck(:external_id)).to eq([ "2" ])
     end
 
     it "rolls back the recipe if ingredient creation fails mid-transaction" do
-      allow(client).to receive(:list_by_category).and_return(["1"])
+      allow(client).to receive(:list_by_category).and_return([ "1" ])
       allow(client).to receive(:lookup).with("1").and_return(
-        meal_data(id: "1", ingredients: [["flour", "1 cup"]])
+        meal_data(id: "1", ingredients: [ [ "flour", "1 cup" ] ])
       )
       allow(Ingredient).to receive(:find_or_create_by!).and_raise(ActiveRecord::RecordInvalid)
       allow(Rails.logger).to receive(:error)
