@@ -9,7 +9,7 @@ docker compose up --build
 docker compose run --rm web bin/rails db:prepare
 ```
 
-Open http://localhost:3000.
+Open http://localhost:3000
 
 What's running:
 - `web` — Rails server on port 3000
@@ -21,4 +21,3 @@ Run tests:
 ```sh
 docker compose run --rm web bundle exec rspec
 ```
-
