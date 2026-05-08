@@ -1,0 +1,28 @@
+<%= link_to "← Back", recipes_path, class: "text-sm text-stone-600 hover:text-stone-900" %>
+
+<h1 class="text-3xl font-bold mt-4 mb-6"><%= @recipe.title %></h1>
+
+<% if @recipe.image_url.present? %>
+  <img src="<%= @recipe.image_url %>" alt="" class="w-full max-w-md rounded-lg mb-6">
+<% end %>
+
+<div class="grid md:grid-cols-2 gap-8">
+  <section>
+    <h2 class="font-semibold mb-3">Ingredients</h2>
+    <ul class="space-y-1 text-sm">
+      <% @recipe.recipe_ingredients.each do |ri| %>
+        <li class="flex gap-3">
+          <span class="text-stone-500 w-20"><%= ri.amount %></span>
+          <span><%= ri.ingredient.name %></span>
+        </li>
+      <% end %>
+    </ul>
+  </section>
+
+  <section>
+    <h2 class="font-semibold mb-3">Instructions</h2>
+    <div class="text-sm whitespace-pre-line leading-relaxed">
+      <%= @recipe.instructions %>
+    </div>
+  </section>
+</div>

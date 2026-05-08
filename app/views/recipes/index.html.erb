@@ -1,0 +1,14 @@
+<h1 class="text-3xl font-bold mb-6">All recipes</h1>
+
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+  <% @recipes.each do |recipe| %>
+    <%= link_to recipe, class: "block bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition" do %>
+      <% if recipe.image_url.present? %>
+        <img src="<%= recipe.image_url %>" alt="<%= recipe.title %>" class="w-full aspect-square object-cover">
+      <% end %>
+      <div class="p-4">
+        <h2 class="font-semibold"><%= recipe.title %></h2>
+      </div>
+    <% end %>
+  <% end %>
+</div>
