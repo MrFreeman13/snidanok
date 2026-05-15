@@ -41,11 +41,12 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.dev
-    command: sh -c "bin/rails tailwindcss:build && bin/rails tailwindcss:watch"
+    command: bin/rails tailwindcss:watch
+    tty: true
+    stdin_open: true
     volumes:
       - .:/app
       - bundle_cache:/usr/local/bundle
-    restart: unless-stopped
 
 volumes:
   pg_data:
