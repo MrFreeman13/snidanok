@@ -29,18 +29,23 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      css:
+        condition: service_started
     environment:
       DATABASE_URL: postgres://snidanok:snidanok@db:5432/snidanok_development
+      TEST_DATABASE_URL: postgres://snidanok:snidanok@db:5432/snidanok_test
       RAILS_ENV: development
 
   css:
     image: snidanok-dev
-    command: bin/rails tailwindcss:watch
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    command: sh -c "bin/rails tailwindcss:build && bin/rails tailwindcss:watch"
     volumes:
       - .:/app
       - bundle_cache:/usr/local/bundle
-    depends_on:
-      - web
+    restart: unless-stopped
 
 volumes:
   pg_data:
