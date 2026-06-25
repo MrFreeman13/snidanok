@@ -7,6 +7,8 @@ class Plan < ApplicationRecord
   validates :start_date, :end_date, presence: true
   validate :end_date_after_start_date
 
+  scope :latest_saved, -> { order(created_at: :desc) }
+
   private
 
   def end_date_after_start_date
