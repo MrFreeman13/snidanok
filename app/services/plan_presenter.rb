@@ -5,14 +5,16 @@
 #
 #   1. Session ephemeral plan -> rebuild slots from the stored ids (API)
 #   2. Most recently saved Plan -> slots from the DB
-#   3. Nothing -> empty state (fallback preview wired next)
+#   3. Nothing (first visit) -> sample 7 breakfasts from the API as a preview
 #
-# Always returns a State so the controller has one shape to work with.
+# Always returns a State. For the first-visit branch the State also carries a
+# `session_payload` the controller can persist, so the preview stays stable on
+# refresh. The presenter itself never writes to the session.
 class PlanPresenter
   CATEGORY = "Breakfast"
   DEFAULT_LENGTH_DAYS = 7
 
-  State = Struct.new(:start_date, :end_date, :slots, keyword_init: true)
+  State = Struct.new(:start_date, :end_date, :slots, :session_payload, keyword_init: true)
 
   def initialize(session_plan: nil, client: MealDbClient.new)
     @session_plan = session_plan
@@ -32,7 +34,7 @@ class PlanPresenter
     plan = Plan.latest_saved.first
     return from_saved_plan(plan) if plan
 
-    empty_state
+    fallback_preview
   end
 
   private
@@ -52,10 +54,27 @@ class PlanPresenter
     State.new(start_date: plan.start_date, end_date: plan.end_date, slots: slots)
   end
 
-  def empty_state
+  # First visit: nothing saved, no session. Sample breakfasts from the API so
+  # the page isn't blank, and hand back a payload the controller can persist.
+  def fallback_preview
     start_d = Date.current
     end_d   = start_d + (DEFAULT_LENGTH_DAYS - 1).days
-    State.new(start_date: start_d, end_date: end_d, slots: [])
+    ids = sample_ids(start_date: start_d, end_date: end_d)
+
+    State.new(
+      start_date: start_d,
+      end_date: end_d,
+      slots: slots_from_ids(start_d, end_d, ids),
+      session_payload: ids.any? ? session_payload(start_d, end_d, ids) : nil
+    )
+  end
+
+  def session_payload(start_date, end_date, external_ids)
+    {
+      "start_date"   => start_date.iso8601,
+      "end_date"     => end_date.iso8601,
+      "external_ids" => external_ids
+    }
   end
 
   # Turns stored external ids into slot presenters (one API lookup each).

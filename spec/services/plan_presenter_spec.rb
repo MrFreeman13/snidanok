@@ -10,13 +10,39 @@ RSpec.describe PlanPresenter do
   end
 
   describe "#call" do
-    context "when neither session nor saved plan exists" do
-      it "returns an empty state with a 7-day range starting today" do
+    context "on a first visit (no session, no saved plan)" do
+      it "samples breakfasts from the API for a 7-day range starting today" do
+        ids = %w[100 101 102 103 104 105 106]
+        allow(client).to receive(:list_by_category).with("Breakfast").and_return(ids)
+        ids.each { |id| allow(client).to receive(:lookup).with(id).and_return(meal(id, "Meal #{id}")) }
+
+        state = described_class.new(session_plan: nil, client: client).call
+
+        expect(state.start_date).to eq(Date.current)
+        expect(state.end_date).to eq(Date.current + 6.days)
+        expect(state.slots.size).to eq(7)
+        expect(state.slots.map(&:scheduled_for)).to eq((Date.current..Date.current + 6.days).to_a)
+      end
+
+      it "exposes a session_payload so the controller can seed the session" do
+        ids = %w[100 101]
+        allow(client).to receive(:list_by_category).and_return(ids)
+        ids.each { |id| allow(client).to receive(:lookup).with(id).and_return(meal(id, "Meal #{id}")) }
+
+        state = described_class.new(session_plan: nil, client: client).call
+
+        expect(state.session_payload["external_ids"]).to match_array(ids)
+        expect(state.session_payload["start_date"]).to eq(Date.current.iso8601)
+        expect(state.session_payload["end_date"]).to eq((Date.current + 6.days).iso8601)
+      end
+
+      it "has nothing to seed when the catalog is empty" do
+        allow(client).to receive(:list_by_category).and_return([])
+
         state = described_class.new(session_plan: nil, client: client).call
 
         expect(state.slots).to be_empty
-        expect(state.start_date).to eq(Date.current)
-        expect(state.end_date).to eq(Date.current + 6.days)
+        expect(state.session_payload).to be_nil
       end
     end
 
@@ -36,6 +62,16 @@ RSpec.describe PlanPresenter do
         expect(state.start_date).to eq(Date.new(2026, 5, 19))
         expect(state.end_date).to eq(Date.new(2026, 5, 20))
         expect(state.slots.map(&:title)).to eq([ "Fresh Toast" ])
+      end
+
+      it "does not produce a session_payload (saved plans are not re-seeded)" do
+        recipe = Recipe.create!(external_id: "1", title: "Toast")
+        plan = Plan.create!(start_date: Date.new(2026, 5, 19), end_date: Date.new(2026, 5, 19))
+        plan.plan_slots.create!(recipe: recipe, scheduled_for: Date.new(2026, 5, 19))
+
+        state = described_class.new(session_plan: nil, client: client).call
+
+        expect(state.session_payload).to be_nil
       end
     end
 
