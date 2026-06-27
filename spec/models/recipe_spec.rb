@@ -33,6 +33,13 @@ RSpec.describe Recipe, type: :model do
     end
   end
 
+  describe "#to_param" do
+    it "uses external_id so URLs key on the natural identifier" do
+      recipe = Recipe.new(external_id: "52772", title: "Pancakes")
+      expect(recipe.to_param).to eq("52772")
+    end
+  end
+
   describe "associations" do
     let(:recipe) { Recipe.create!(valid_attributes) }
     let(:ingredient) { Ingredient.create!(name: "Beets") }
