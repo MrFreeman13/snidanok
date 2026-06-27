@@ -1,6 +1,6 @@
 Rails.application.routes.draw do
   root to: "plans#current"
-  resources :recipes, only: [ :index, :show ]
+  resources :recipes, only: [ :index, :show ], param: :external_id
   resources :plans, only: [] do
     collection do
       post :generate

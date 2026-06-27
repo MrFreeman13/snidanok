@@ -19,18 +19,20 @@
 <% if @slots.any? %>
   <ul class="space-y-3">
     <% @slots.each do |slot| %>
-      <li class="flex items-center gap-4 bg-white rounded-lg p-4 shadow-sm">
-        <% if slot.image_url.present? %>
-          <img src="<%= slot.image_url %>" alt="" class="w-16 h-16 rounded object-cover">
-        <% else %>
-          <div class="w-16 h-16 rounded bg-stone-100"></div>
-        <% end %>
-        <div class="flex-1">
-          <div class="text-xs uppercase text-stone-500">
-            <%= slot.scheduled_for.strftime("%a • %b %d") %>
+      <li>
+        <%= link_to recipe_path(slot.external_id), class: "flex items-center gap-4 bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition", data: { turbo_prefetch: false } do %>
+          <% if slot.image_url.present? %>
+            <img src="<%= slot.image_url %>" alt="" class="w-16 h-16 rounded object-cover">
+          <% else %>
+            <div class="w-16 h-16 rounded bg-stone-100"></div>
+          <% end %>
+          <div class="flex-1">
+            <div class="text-xs uppercase text-stone-500">
+              <%= slot.scheduled_for.strftime("%a • %b %d") %>
+            </div>
+            <div class="font-semibold"><%= slot.title %></div>
           </div>
-          <div class="font-semibold"><%= slot.title %></div>
-        </div>
+        <% end %>
       </li>
     <% end %>
   </ul>
