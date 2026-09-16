@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_04_23_131638) do
+ActiveRecord::Schema[8.1].define(version: 2026_05_19_202930) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -19,6 +19,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_23_131638) do
     t.string "name", null: false
     t.datetime "updated_at", null: false
     t.index ["name"], name: "index_ingredients_on_name", unique: true
+  end
+
+  create_table "plan_slots", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "plan_id", null: false
+    t.bigint "recipe_id", null: false
+    t.date "scheduled_for", null: false
+    t.datetime "updated_at", null: false
+    t.index ["plan_id", "scheduled_for"], name: "index_plan_slots_on_plan_id_and_scheduled_for", unique: true
+    t.index ["plan_id"], name: "index_plan_slots_on_plan_id"
+    t.index ["recipe_id"], name: "index_plan_slots_on_recipe_id"
+  end
+
+  create_table "plans", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.date "end_date", null: false
+    t.date "start_date", null: false
+    t.datetime "updated_at", null: false
   end
 
   create_table "recipe_ingredients", force: :cascade do |t|
@@ -43,6 +61,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_04_23_131638) do
     t.index ["external_id"], name: "index_recipes_on_external_id", unique: true
   end
 
+  add_foreign_key "plan_slots", "plans"
+  add_foreign_key "plan_slots", "recipes"
   add_foreign_key "recipe_ingredients", "ingredients"
   add_foreign_key "recipe_ingredients", "recipes"
 end

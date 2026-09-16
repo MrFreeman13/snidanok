@@ -1,0 +1,43 @@
+<h1 class="text-3xl font-bold mb-6">Breakfast plan</h1>
+
+<%= form_with url: generate_plans_path, method: :post, local: true, class: "flex flex-wrap items-end gap-3 mb-8" do |f| %>
+  <div>
+    <%= f.label :start_date, class: "block text-xs uppercase text-stone-500 mb-1" %>
+    <%= f.date_field :start_date, value: @start_date, required: true,
+                     class: "border border-stone-300 rounded-md px-3 py-2 text-sm" %>
+  </div>
+  <span class="text-stone-500 pb-2">to</span>
+  <div>
+    <%= f.label :end_date, class: "block text-xs uppercase text-stone-500 mb-1" %>
+    <%= f.date_field :end_date, value: @end_date, required: true,
+                     class: "border border-stone-300 rounded-md px-3 py-2 text-sm" %>
+  </div>
+  <%= f.submit "Generate",
+        class: "bg-stone-900 text-white rounded-md px-4 py-2 text-sm hover:bg-stone-700 transition" %>
+<% end %>
+
+<% if @slots.any? %>
+  <ul class="space-y-3">
+    <% @slots.each do |slot| %>
+      <li>
+        <%= link_to recipe_path(slot.external_id), class: "flex items-center gap-4 bg-white rounded-lg p-4 shadow-sm hover:shadow-md transition", data: { turbo_prefetch: false } do %>
+          <% if slot.image_url.present? %>
+            <img src="<%= slot.image_url %>" alt="" class="w-16 h-16 rounded object-cover">
+          <% else %>
+            <div class="w-16 h-16 rounded bg-stone-100"></div>
+          <% end %>
+          <div class="flex-1">
+            <div class="text-xs uppercase text-stone-500">
+              <%= slot.scheduled_for.strftime("%a • %b %d") %>
+            </div>
+            <div class="font-semibold"><%= slot.title %></div>
+          </div>
+        <% end %>
+      </li>
+    <% end %>
+  </ul>
+<% else %>
+  <div class="bg-white rounded-lg p-8 shadow-sm text-center">
+    <p class="text-stone-600">No breakfasts yet. Pick a date range and click Generate.</p>
+  </div>
+<% end %>

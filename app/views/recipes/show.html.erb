@@ -1,4 +1,4 @@
-<%= link_to "← Back", recipes_path, class: "text-sm text-stone-600 hover:text-stone-900" %>
+<%= link_to "← Back", root_path, class: "text-sm text-stone-600 hover:text-stone-900" %>
 
 <h1 class="text-3xl font-bold mt-4 mb-6"><%= @recipe.title %></h1>
 
@@ -10,10 +10,10 @@
   <section>
     <h2 class="font-semibold mb-3">Ingredients</h2>
     <ul class="space-y-1 text-sm">
-      <% @recipe.recipe_ingredients.each do |ri| %>
+      <% @recipe.ingredients.each do |ingredient| %>
         <li class="flex gap-3">
-          <span class="text-stone-500 w-20"><%= ri.amount %></span>
-          <span><%= ri.ingredient.name %></span>
+          <span class="text-stone-500 w-20"><%= ingredient.amount %></span>
+          <span><%= ingredient.name %></span>
         </li>
       <% end %>
     </ul>
