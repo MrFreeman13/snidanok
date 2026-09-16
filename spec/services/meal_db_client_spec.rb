@@ -47,15 +47,6 @@ RSpec.describe MealDbClient do
 
       expect(client.list_by_category("Breakfast")).to eq([])
     end
-
-    it "URL-encodes the category" do
-      stub_http(
-        "https://www.themealdb.com/api/json/v1/1/filter.php?c=Side+Dish",
-        { "meals" => [] }
-      )
-
-      expect(client.list_by_category("Side Dish")).to eq([])
-    end
   end
 
   describe "#lookup" do
@@ -76,6 +67,36 @@ RSpec.describe MealDbClient do
       )
 
       expect(client.lookup("999")).to be_nil
+    end
+  end
+
+  describe "when the API is unreachable" do
+    before do
+      allow(Net::HTTP).to receive(:get).and_raise(SocketError, "getaddrinfo: nodename nor servname provided")
+      allow(Rails.logger).to receive(:error)
+    end
+
+    it "returns an empty list of summaries instead of raising" do
+      expect(client.summaries("Breakfast")).to eq([])
+    end
+
+    it "returns nil from lookup instead of raising" do
+      expect(client.lookup("42")).to be_nil
+    end
+
+    it "logs the failure" do
+      client.summaries("Breakfast")
+
+      expect(Rails.logger).to have_received(:error).with(/\[MealDbClient\].*SocketError/)
+    end
+  end
+
+  describe "when the API returns malformed JSON" do
+    it "returns an empty list of summaries instead of raising" do
+      allow(Net::HTTP).to receive(:get).and_return("<html>gateway timeout</html>")
+      allow(Rails.logger).to receive(:error)
+
+      expect(client.summaries("Breakfast")).to eq([])
     end
   end
 

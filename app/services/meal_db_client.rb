@@ -2,9 +2,16 @@
 
 require "net/http"
 require "json"
+require "openssl"
 
 class MealDbClient
   BASE_URL = "https://www.themealdb.com/api/json/v1/1"
+
+  NETWORK_ERRORS = [
+    SocketError, SystemCallError, IOError,
+    Net::OpenTimeout, Net::ReadTimeout,
+    OpenSSL::SSL::SSLError, JSON::ParserError
+  ].freeze
 
   # Bulk listing: each summary already carries idMeal, strMeal and
   # strMealThumb — enough to render a plan list without per-recipe lookups.
@@ -25,7 +32,12 @@ class MealDbClient
 
   private
 
+  # Degrades to an empty payload on network/parse failure so callers render
+  # an empty state instead of a 500 (summaries -> [], lookup -> nil).
   def get_json(url)
     JSON.parse(Net::HTTP.get(URI(url)))
+  rescue *NETWORK_ERRORS => e
+    Rails.logger.error("[MealDbClient] #{url}: #{e.class}: #{e.message}")
+    {}
   end
 end
