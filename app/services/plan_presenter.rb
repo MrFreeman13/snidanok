@@ -17,6 +17,7 @@
 class PlanPresenter
   CATEGORY = "Breakfast"
   DEFAULT_LENGTH_DAYS = 7
+  MAX_PLAN_DAYS = 31
 
   State = Struct.new(:start_date, :end_date, :slots, :session_payload, keyword_init: true)
 
@@ -25,11 +26,16 @@ class PlanPresenter
     @client = client
   end
 
-  # Random breakfast ids for a date range. Used by PlansController#generate to
-  # seed the session before the POST-redirect-GET.
-  def sample_ids(start_date:, end_date:)
-    days = (start_date..end_date).to_a.size
-    summaries.sample(days).map { |m| m["idMeal"] }
+  # Samples random breakfasts for the range and returns the session payload
+  # PlansController#generate stores before its POST-redirect-GET.
+  # Returns nil for an invalid range or an empty catalog.
+  def generate_payload(start_date:, end_date:)
+    return unless valid_range?(start_date, end_date)
+
+    ids = summaries.sample(day_count(start_date, end_date)).map { |m| m["idMeal"] }
+    return if ids.empty?
+
+    session_payload(start_date, end_date, ids)
   end
 
   def call
@@ -42,6 +48,16 @@ class PlanPresenter
   end
 
   private
+
+  def valid_range?(start_date, end_date)
+    start_date.present? && end_date.present? &&
+      end_date >= start_date &&
+      day_count(start_date, end_date) <= MAX_PLAN_DAYS
+  end
+
+  def day_count(start_date, end_date)
+    (end_date - start_date).to_i + 1
+  end
 
   def summaries
     @summaries ||= @client.summaries(CATEGORY)

@@ -10,15 +10,25 @@ class PlansController < ApplicationController
   end
 
   def generate
-    start_date = Date.parse(params[:start_date])
-    end_date   = Date.parse(params[:end_date])
+    payload = PlanPresenter.new.generate_payload(
+      start_date: parse_date(params[:start_date]),
+      end_date: parse_date(params[:end_date])
+    )
 
-    session[:plan] = {
-      "start_date"   => start_date.iso8601,
-      "end_date"     => end_date.iso8601,
-      "external_ids" => PlanPresenter.new.sample_ids(start_date: start_date, end_date: end_date)
-    }
+    if payload
+      session[:plan] = payload
+      redirect_to root_path
+    else
+      redirect_to root_path,
+                  alert: "Couldn't generate a plan — pick a valid range of up to #{PlanPresenter::MAX_PLAN_DAYS} days."
+    end
+  end
 
-    redirect_to root_path
+  private
+
+  def parse_date(value)
+    Date.iso8601(value.to_s)
+  rescue Date::Error
+    nil
   end
 end

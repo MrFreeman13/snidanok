@@ -34,6 +34,9 @@
       </div>
     </header>
     <main class="max-w-4xl mx-auto px-6 py-8">
+      <% if flash[:alert] %>
+        <p class="bg-red-50 text-red-800 text-sm rounded-md px-4 py-2 mb-6"><%= flash[:alert] %></p>
+      <% end %>
       <%= yield %>
     </main>
   </body>

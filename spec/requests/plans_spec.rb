@@ -107,5 +107,36 @@ RSpec.describe "Plans", type: :request do
       get root_path
       expect(response.body).to include("Shakshuka")
     end
+
+    context "with an invalid range" do
+      it "redirects with an alert instead of a 500 when a date is unparseable" do
+        post generate_plans_path, params: { start_date: "banana", end_date: "2026-05-21" }
+
+        expect(response).to redirect_to(root_path)
+        follow_redirect!
+        expect(response.body).to include("pick a valid range of up to")
+        expect(session[:plan]).to be_nil
+      end
+
+      it "redirects with an alert when end_date is before start_date" do
+        allow(client).to receive(:summaries).and_return([ summary("100", "Meal") ])
+
+        post generate_plans_path, params: { start_date: "2026-05-21", end_date: "2026-05-19" }
+
+        expect(response).to redirect_to(root_path)
+        expect(flash[:alert]).to include("Couldn't generate a plan")
+        expect(session[:plan]).to be_nil
+      end
+
+      it "redirects with an alert when the range exceeds the maximum" do
+        allow(client).to receive(:summaries).and_return([ summary("100", "Meal") ])
+
+        post generate_plans_path, params: { start_date: "2026-05-01", end_date: "2026-07-01" }
+
+        expect(response).to redirect_to(root_path)
+        expect(flash[:alert]).to include("Couldn't generate a plan")
+        expect(session[:plan]).to be_nil
+      end
+    end
   end
 end

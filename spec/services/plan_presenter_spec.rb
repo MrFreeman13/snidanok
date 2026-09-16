@@ -116,27 +116,64 @@ RSpec.describe PlanPresenter do
     end
   end
 
-  describe "#sample_ids" do
-    it "samples one id per day from the catalog summaries" do
+  describe "#generate_payload" do
+    subject(:presenter) { described_class.new(client: client) }
+
+    it "samples one id per day and returns the session payload" do
       summaries = %w[100 101 102 103].map { |id| summary(id, "Meal #{id}") }
       allow(client).to receive(:summaries).with("Breakfast").and_return(summaries)
 
-      ids = described_class.new(client: client).sample_ids(
-        start_date: Date.new(2026, 5, 19), end_date: Date.new(2026, 5, 21)
-      )
+      payload = presenter.generate_payload(start_date: Date.new(2026, 5, 19), end_date: Date.new(2026, 5, 21))
 
-      expect(ids.size).to eq(3)
-      expect(ids).to all(be_in(%w[100 101 102 103]))
+      expect(payload["start_date"]).to eq("2026-05-19")
+      expect(payload["end_date"]).to eq("2026-05-21")
+      expect(payload["external_ids"].size).to eq(3)
+      expect(payload["external_ids"]).to all(be_in(%w[100 101 102 103]))
     end
 
     it "returns at most as many ids as the catalog has" do
       allow(client).to receive(:summaries).and_return([ summary("100", "Meal") ])
 
-      ids = described_class.new(client: client).sample_ids(
-        start_date: Date.new(2026, 5, 19), end_date: Date.new(2026, 5, 25)
-      )
+      payload = presenter.generate_payload(start_date: Date.new(2026, 5, 19), end_date: Date.new(2026, 5, 25))
 
-      expect(ids.size).to eq(1)
+      expect(payload["external_ids"]).to eq([ "100" ])
+    end
+
+    it "allows a single-day range" do
+      allow(client).to receive(:summaries).and_return([ summary("100", "Meal") ])
+
+      payload = presenter.generate_payload(start_date: Date.new(2026, 5, 19), end_date: Date.new(2026, 5, 19))
+
+      expect(payload["external_ids"].size).to eq(1)
+    end
+
+    it "returns nil when the catalog is empty" do
+      allow(client).to receive(:summaries).and_return([])
+
+      expect(presenter.generate_payload(start_date: Date.new(2026, 5, 19), end_date: Date.new(2026, 5, 21))).to be_nil
+    end
+
+    it "returns nil when either date is missing, without calling the API" do
+      allow(client).to receive(:summaries)
+
+      expect(presenter.generate_payload(start_date: nil, end_date: Date.new(2026, 5, 21))).to be_nil
+      expect(presenter.generate_payload(start_date: Date.new(2026, 5, 19), end_date: nil)).to be_nil
+      expect(client).not_to have_received(:summaries)
+    end
+
+    it "returns nil when end_date is before start_date" do
+      allow(client).to receive(:summaries)
+
+      expect(presenter.generate_payload(start_date: Date.new(2026, 5, 21), end_date: Date.new(2026, 5, 19))).to be_nil
+      expect(client).not_to have_received(:summaries)
+    end
+
+    it "returns nil when the range exceeds MAX_PLAN_DAYS" do
+      allow(client).to receive(:summaries)
+      too_long = Date.new(2026, 5, 19) + described_class::MAX_PLAN_DAYS.days
+
+      expect(presenter.generate_payload(start_date: Date.new(2026, 5, 19), end_date: too_long)).to be_nil
+      expect(client).not_to have_received(:summaries)
     end
   end
 end
